@@ -88,5 +88,5 @@ A aplicação será aberta automaticamente no _browser_ pronta a utilizar.
 - RapidFuzz  -> Pesquisa por similaridade
 
 ## 🚀 Try it out!
-You can use this link to try the app:
-👉 movie-search-engine-python-b8cpcqku2kezzuviyvxnjg.streamlit.app/
+Click here and try it out:
+👉 [Movie Search Engine](movie-search-engine-python-b8cpcqku2kezzuviyvxnjg.streamlit.app/)
