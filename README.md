@@ -86,3 +86,7 @@ A aplicação será aberta automaticamente no _browser_ pronta a utilizar.
 - Pandas  -> Carregamento de dados e tratamento dos mesmos
 - Streamlit  -> Criação da interface do projeto
 - RapidFuzz  -> Pesquisa por similaridade
+
+## 🚀 Try it out!
+You can use this link to try the app:
+👉 movie-search-engine-python-b8cpcqku2kezzuviyvxnjg.streamlit.app/
