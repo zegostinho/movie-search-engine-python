@@ -3,11 +3,12 @@ import requests
 from dotenv import load_dotenv
 import streamlit as st
 
-
 load_dotenv()
 
-
-ACCESS_TOKEN = os.getenv("TMDB_ACCESS_TOKEN")
+ACCESS_TOKEN = st.secrets.get(
+    "TMDB_ACCESS_TOKEN",
+    os.getenv("TMDB_ACCESS_TOKEN")
+)
 
 url = "https://api.themoviedb.org/3/search/movie"
 
