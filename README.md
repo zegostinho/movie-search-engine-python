@@ -1,92 +1,127 @@
-# Find Movies
+# Movie Search Engine 🎬
 
-Este é um projeto em Python para encontrar filmes do IMDB através de pesquisa aproximada.
-Consiste num **motor de busca** em que utilizador faz a sua pesquisa do filme que deseja encontrar, e mesmo sem saber o título correto, é possível chegar ao resultado pretendido.
-Os resultados provêm de um dataset do IMDB com 1000 entradas, pelo que algumas pesquisas poderão não ter correspondências.
+A Python web application that helps users find movies, even when they don't remember the exact title.
+
+The application uses the **TMDB API** to search for movies and display information such as posters, ratings, and synopses.
+
+If no results are found, **RapidFuzz** is used to suggest similar movie titles from a local IMDb dataset. This helps users find the movie they are looking for, even when they make spelling mistakes or only remember part of the title.
 
 ---
 
-# Estrutura do projeto
-```
-- Find_Movies/
-    - data/
-        - top_1000_IMDB_movies.csv
-    - screenshots/
-        - pagina_com_resultados.png
-        - pagina_inicial.png
-    - utils/
-        - dados.py          # Carregamento e tratamento dos dados da pasta data/
-        - pesquisa.py       # Implementação de pesquisa aproximada com RapidFuzz
-                              e os seus resultados
-    - app.py                # Construção da interface da app com Streamlit
-    - README.md
-    - requirements.txt
-```
-
-### Funcionalidades técnicas
-
-Este projeto utiliza a biblioteca RapidFuzz, nomeadamente o algoritmo WRatio, que permite extrair o título de um filme de um _dataset_ incluído no mesmo, a partir de um título providenciado pelo utilizador.
-
-```fuzz.WRatio```:
-- Calcula um rácio comparando outros métodos de comparação de strings
-- Devolve uma pontuação de semelhança entre 0 - 100
-
-```utils.default_process```:
-- Converte todos os caracteres para minúsculas
-- Elimina espaços
-- Elimina todos os caracteres que não sejam alfanuméricos
-
-Ao combinar estes parâmetros com a função ```process.extract()```, é possível extrair títulos semelhantes do _dataset_, os pontos de semelhança e o índice em que se encontram.
-
-Dentro desta função é possível definir o nível mínimo de semelhança, bem como o número de resultados pretendidos, no entanto, essa decisão fica ao encargo do utilizador através de _sliders_ criados para a _app_.
-
-Os resultados da pesquisa são guardados numa lista, em que cada valor corresponde a um dicionário que contém informações sobreos filmes encontrados.
-
-### Otimização de performance
-
-A biblioteca Streamlit permite usar ```@st.cache_data```, um decorador que guarda a cache de um _dataset_.
-Isto permite:
-- Evitar recarregar o _dataset_ a cada interação
-- Melhorar tempo de resposta
-- Otimizar a performance da _app_
-
-### Como utilizar
-
-1) Abrir um terminal
-2) Ir até à pasta do projeto:
+## Project Structure
 
 ```
-cd Find_movies
+Find_Movies/
+├── assets/                     # Screenshots of the application
+├── data/
+│   └── top_1000_imdb_movies.csv
+├── utils/
+│   ├── candidates_search.py    # Finds similar movie titles using RapidFuzz
+│   ├── display_results.py      # Displays movie results in the interface
+│   ├── read_data.py            # Loads the IMDb dataset
+│   ├── reset.py                # Resets the search
+│   └── tmdb.py                 # Handles requests to the TMDB API
+├── main.py                     # Main application and user interface
+├── .env                        # Stores the TMDB access token
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
-3) Instalar as dependências do ficheiro _requirements.txt_ com o comando **pip**
-(no caso de não as ter instaladas):
 
-```
-pip install -r requirements.txt
+## Features and Technologies
+
+### Movie Search
+- Searches for movies using the TMDB API.
+- Displays movie posters, ratings, release years, and synopses.
+- Allows users to choose how many results they want to see.
+
+### Similar Title Suggestions
+- Uses RapidFuzz to find similar titles when the TMDB API returns no results.
+- Searches a local IMDb dataset containing 1,000 movie entries.
+- Helps users find movies when they make spelling mistakes or enter incomplete titles.
+
+### Performance and Error Handling
+- Uses Streamlit's `@st.cache_data` decorator to reduce repeated API requests and avoid loading the dataset again unnecessarily.
+- Handles common errors, such as connection problems, request timeouts, and invalid server responses.
+
+### Technologies
+- **Python** — Main programming language.
+- **Streamlit** — Builds the web interface.
+- **TMDB API** — Provides movie search results and information.
+- **RapidFuzz** — Finds similar movie titles.
+- **Pandas** — Loads the local IMDb dataset.
+- **Requests** — Sends HTTP requests to the TMDB API.
+- **python-dotenv** — Loads the TMDB access token from environment variables.
+
+## Installation and Usage
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/zegostinho/movie-search-engine-python.git
+cd movie-search-engine-python
 ```
 
-4) Executar a aplicação:
+### 2. Create and activate a virtual environment (optional but recommended)
 
+```bash
+python -m venv .venv
 ```
+
+On macOS and Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+On Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+### 3. Install the dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 4. Configure the TMDB API token
+
+Create a `.env` file in the project root directory and add your TMDB Read Access Token:
+
+```text
+TMDB_ACCESS_TOKEN=your_token_here
+```
+
+Replace `your_token_here` with your own token. You can obtain a token through your TMDB account.
+
+**Important:** Never share your access token or upload your `.env` file to GitHub.
+
+### 5. Run the application
+
+```bash
 streamlit run main.py
 ```
-A aplicação será aberta automaticamente no _browser_ pronta a utilizar.
 
-### Interface
+Streamlit will start the application and provide a local URL that you can open in your browser.
+## Interface
 
-**Página Inicial:**
-![Página Inicial](assets/pagina_inicial.png)
+**Homepage:**
+![Homepage](assets/homepage.png)
 
-**Resultados:**
-![Resultados](assets/pagina_com_resultados.png)
+**Search Results:**
+![Results](assets/results.png)
+![Spelling Mistake](assets/spelling_mistake.png)
 
 ---
-
-### Dependências
-- Pandas  -> Carregamento de dados e tratamento dos mesmos
-- Streamlit  -> Criação da interface do projeto
-- RapidFuzz  -> Pesquisa por similaridade
 
 ## 🚀 Try it out!
 Click here and try it out:
-👉 [Movie Search Engine](https://movie-search-engine-python-b8cpcqku2kezzuviyvxnjg.streamlit.app/)
+👉 [Movie Search Engine](https://movie-search-engine-python-zegostinho.streamlit.app/)
+
+## Acknowledgements
+
+Movie data is provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.

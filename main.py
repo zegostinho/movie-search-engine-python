@@ -1,85 +1,113 @@
 import streamlit as st
+import requests
+from utils.read_data import load_dataset
+from utils.candidates_search import find_candidates
+from utils.tmdb import movie_search
+from utils.reset import reset
+from utils.display_results import display_results
 
-from utils.dados import carregar_dataset, tratamento_dados
-from utils.pesquisa import encontrar_filme
 
-
-
-# Configuração da página web
+# Configuration of the web page
 st.set_page_config(
-    page_title='Find IMDB Movies',
+    page_title='Find Any Movie',
     page_icon='🎬',
     layout='wide'
 )
 
-st.title('Motor de Busca para Filmes do IMDB 🎬')
-st.subheader('Encontra o filme que tanto procuras mesmo sem saber o nome completo! 🕵', divider='rainbow',)
+# Load the IMDb dataset for similar title suggestions
+df = load_dataset("data/top_1000_imdb_movies.csv")
 
-# Carregar o dataset
-@st.cache_data
-def carregar_dados_cache(path):
-    df = carregar_dataset(path)
-    df = tratamento_dados(df)
 
-    return df
+st.title('Movie Search Engine 🎬', text_alignment='center')
+st.subheader(
+    "Find any movie even if you don't remember its correct title! 🕵",
+    divider='rainbow',
+    text_alignment='center'
+)
 
-path_df = 'data/top_1000_imdb_movies.csv'
-df_tratado = carregar_dados_cache(path_df)
-
-# Continuação da configuração da página web
 st.markdown('')
 
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
-if "similaridade" not in st.session_state:
-    st.session_state.similaridade = 50
 
-if "limite" not in st.session_state:
-    st.session_state.limite = 5
+if "limit" not in st.session_state:
+    st.session_state.limit = 5
 
-user_input = st.text_input(
-    "De que filme estás à procura? 🔎",
-    key="user_input"
-    )
+col1, col2 = st.columns(2, gap="medium")
 
-similaridade = st.slider(
-    "Seleciona a percentagem mínima de semelhança 👀",
-    min_value=0, 
-    max_value=100, 
-    key="similaridade"
-    )
+with col1:
+    user_input = st.text_input(
+        "Which movie are you looking for? 🔎",
+        placeholder="Type here",
+        key="user_input"
+        )
 
-limite = st.slider(
-    "Seleciona a quantidade de resultados que queres ver 🎯", 
-    min_value=1, 
-    max_value=10,
-    key="limite"
-    )
+with col2:
+    result_options = list(range(1, 11))
+    limit = st.selectbox(
+        "How many results do you want to see? 🎯",
+        options=result_options,
+        key="limit"
+        )
 
-st.markdown("*Nota: O número de resultados é menor, quanto maior for o valor de semelhança.*")
 
-# Imprimir os resultados
-# Cada resultado tem informação adicional, que pode ser expandida
+# Display search results
 
 if user_input:
-    resultados = encontrar_filme(df_tratado, user_input, limite, similaridade)
-    st.markdown("#### **Resultados:**")
-    if resultados:
-        for filme in resultados:
-            with st.expander(f"✅ {filme['titulo']} ({filme['ano']}) - Semelhança: {filme['semelhanca']:.2f}%"):
-                st.write(f"⏳ **Duração:** {filme['duracao']} min")
-                st.write(f"⭐️ **Rating:** {filme['rating']}")
-                st.write(f"📖 **Sinopse:** {filme['sinopse']}")
-    else:
-        st.write("Não foram encontradas correspondências ☹️")
+    try:
+        original_query = user_input
 
-# Adicionar um botão RESET
-def reset():
-    st.session_state.user_input = ""
-    st.session_state.similaridade = 50
-    st.session_state.limite = 5
+        if user_input != st.session_state.get("previous_query"):
+            st.session_state.pop("selected_title", None)
 
-st.button("🔄 RESET", on_click=reset)
+        st.session_state["previous_query"] = user_input
 
-st.caption("*Este projeto foi desenvolvido com Streamlit*", text_alignment='center')
+        search_query = st.session_state.get("selected_title") or original_query
+        movies = movie_search(search_query)
+
+        if movies is None:
+            st.error("Unable to retrieve movie results.")
+
+        elif movies == []:
+            candidates = find_candidates(df, original_query, 5, 70)
+            if not candidates:
+                st.write("No matches found ☹️")
+
+            else:
+                st.write(f"No matches found for *{search_query}*.")
+                st.write("Is one of these titles close to your search?")
+
+                for candidate in candidates:
+                    if st.button(candidate):
+                        st.session_state["selected_title"] = candidate
+                        st.rerun()
+
+
+        else:
+            display_results(movies, limit)
+
+            st.button("RESET", on_click=reset, icon='🔄')
+
+    except requests.exceptions.Timeout:
+        st.error("The request timed out.")
+
+    except requests.exceptions.ConnectionError:
+        st.error("Unable to connect to the server.")
+
+    except requests.exceptions.HTTPError as error:
+        new_response = error.response
+
+        if new_response is not None:
+            message = new_response.json()
+            st.error(
+                f"Error {new_response.status_code}. "
+                f"{message.get("status_message", "Unexpected HTTP error.")}"
+            )
+
+    except requests.exceptions.JSONDecodeError:
+        st.error("The server returned an invalid response")
+
+
+
+st.caption("*This project was developed using Streamlit and The Movie Database API*", text_alignment='center')
